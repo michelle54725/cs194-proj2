@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+  li {
+    list-style-type:none;
+    margin-right:10px;
+    margin-bottom:10px;
+    float:left;
+  }
+  tr.spaceUnder>td {
+    padding-bottom: 1em;
+  }
+  table.center {
+    margin-left:auto; 
+    margin-right:auto;
+  }
+  .cent {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+  }
+</style>
+<title>CS 194-26: Proj2</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+<body>
+
+<h1 align="middle">CS 194-26: Intro to Computer Vision and Computational Photography, Fall 2020</h1>
+<h1 align="middle">Project 2: Fun with Filters and Frequencies!</h1>
+<h2 align="middle">Michelle Mao, CS194-26</h2>
+
+<br><br>
+
+<h2 align="middle">Takeaways</h2>
+<p>
+<b>Coolest thing I learned:</b> Gradient magnitudes are a fundamental component of the Canny edge detector!
+</br><b>Most important thing I learned: </b> Convolution is slow and a bottleneck in many of the image processing techniques we implemented in this project. Minimize to optimize!
+</p>
+
+
+<h2 align="middle">1.1: Finite Difference Operator</h2>
+<img src="diff_op.png" width="300px"/>
+<p> One method of edge detection in image processing uses a calculation called the image gradient. In fact, the Canny edge detector, invented by our very own CS Dept. Chair, uses image gradients. Here we calculate the gradient, a 2D vector at each point, through convolution of an image with each of the finite difference operators shown above. As the name "gradient" suggestions, the gradient <i>magnitude</i> at each image point measures the rate of change in the <i>gradient direction</i>, where the direction is that of greatest intensity increase. In other words the gradient is like "taking partial derivatives" of our image to find the direction/magnitude of change. We obtain the magnitudes by the sqrt of the sum of squares of the two convolution results (think: norm of a vector).
+</p>
+</br>
+<table style="width=100%">
+<tr class="spaceUnder">
+    <td> 
+        <img src="cameraman.png" align="middle" width="333"/>
+        <figcaption align="middle">og cameraman</figcaption>
+    </td>
+    <td>
+        <img src="1.1_cameraman_dx.jpg" align="middle" width="333"/>
+        <figcaption align="middle">partial derivative in x</figcaption>
+    </td>
+    <td>
+        <img src="1.1_cameraman_dy.jpg" align="middle" width="333"/>
+        <figcaption align="middle">partial derivative in y</figcaption>
+    </td>
+</tr>
+<tr><td><b>Binarized gradient magnitudes:</b> (threshold)</td></tr>
+<tr>
+    <td> 
+        <img src="1.1_gm0.10.jpg" align="middle" width="333"/>
+        <figcaption align="middle">binarized gradient magnitude (0.10)</figcaption>
+    </td>
+    <td>
+        <img src="1.1_gm0.15.jpg" align="middle" width="333"/>
+        <figcaption align="middle">binarized gradient magnitude (0.15)</figcaption>
+    </td>
+    <td>
+        <img src="1.1_gm0.20.jpg" align="middle" width="333"/>
+        <figcaption align="middle">binarized gradient magnitude (0.20)</figcaption>
+    </td>
+</tr>
+</table>
+
+<h2 align="middle">1.2: Dertivative of Gaussian (DoG) Filer</h2>
+<table style="width=100%">
+<tr class="spaceUnder">
+    <td> 
+        <img src="1.2_0.06.jpg" align="middle" width="333"/>
+        <figcaption align="middle">threshold = 0.06</figcaption>
+    </td>
+    <td>
+        <img src="1.2_0.08.jpg" align="middle" width="333"/>
+        <figcaption align="middle">threshold = 0.08</figcaption>
+    </td>
+    <td>
+        <img src="1.2_0.10.jpg" align="middle" width="333"/>
+        <figcaption align="middle">threshold = 0.10</figcaption>
+    </td>
+</tr>
+</table>
+<p><b>Derivative of Gaussian (DoG)</b></p>
+<table class="center">
+<tr>
+    <td> 
+        <img src="1.2_DoGx.jpg" align="middle" width="200"/>
+        <figcaption align="middle">in x</figcaption>
+    </td>
+    <td>
+        <img src="1.2_DoGy.jpg" align="middle" width="200"/>
+        <figcaption align="middle">in y</figcaption>
+    </td>
+</tr>
+</table>
+<p> By blurring the image before calculating its gradient, we reduce high frequency noise, allowing us to decrease the threshold for binarizing the gradient magnitude values with less compromise for fainter edges. For example, comparing the two threshold=0.10 images, the blurred version preserves dominant edges (man and camera) and completely eliminated the noise from the grass. However, the background building edges were lost. Zooming in on the edges, we also see the blurred (AKA smoothed) image yielded smoother edges (i.e. less "jaggies").
+</p>
+<h2 align="middle">1.3: Image Straightening</h2>
+<p>possible rotation angles: [-15, -12, -9, -6, -3, 0, 3, 6, 9, 12, 15]
+</br>histogram bins (in deg): [ -3.   3.  87.  93. 177. 183.]
+</p>
+<table style="width=100%" class="center">
+<tr>
+    <td> 
+        <img src="facade.jpg" align="middle" width="333"/>
+        <figcaption align="middle">og facade</figcaption>
+    </td>
+    <td>
+        <img src="2.5_straight.png" align="middle" width="430"/>
+        <figcaption align="middle">straightened facade (rotated -3 deg)</figcaption>
+    </td>
+    <td>
+        <img src="2.5_hist.png" align="middle" width="430"/>
+        <figcaption align="middle">histogram of gradient angles of edges in rotation</figcaption>
+    </td>
+</tr>
+</table>
+</br>
+<p>Failing case: </p>
+<table style="width=100%" class="center">
+<tr>
+    <td> 
+        <img src="campanile.jpg" align="middle" width="333"/>
+        <figcaption align="middle">og facade</figcaption>
+    </td>
+    <td>
+        <img src="2.5_campanile_fail.jpg" align="middle" width="330"/>
+        <figcaption align="middle">straightened campanile (rotated 0 deg)</figcaption>
+    </td>
+    <td>
+        <img src="2.5_campanile_hist.png" align="middle" width="430"/>
+        <figcaption align="middle">histogram of gradient angles of edges in rotation</figcaption>
+    </td>
+</tr>
+</table>
+<h2 align="middle">2.1: Image "Sharpening"</h2>
+<table style="width=100%" class="center">
+<tr>
+    <td> 
+        <img src="taj.jpg" align="middle" width="333"/>
+        <figcaption align="middle">og taj</figcaption>
+    </td>
+    <td>
+        <img src="2.1_taj_s10a0.75.png" align="middle" width="430"/>
+        <figcaption align="middle">alpha=0.75</figcaption>
+    </td>
+</tr>
+</table>
+<p><b>Progression</b> </br>First row: alpha = 0.0, 0.2, 0.5, 0.75, 1.0 </br>Second row: alpha = 1.0, 1.2, 1.5, 2.0, 5.0</p>
+<table style="width=100%" class="center">
+<tr>
+    <td> 
+        <img src="2.1_0.jpg" align="middle" width="200"/>
+    </td>
+    <td>
+        <img src="2.1_0.2.jpg" align="middle" width="200"/>
+    </td>
+    <td> 
+        <img src="2.1_0.5.jpg" align="middle" width="200"/>
+    </td>
+    <td>
+        <img src="2.1_0.75.jpg" align="middle" width="200"/>
+    </td>
+    <td>
+        <img src="2.1_1.0.jpg" align="middle" width="200"/>
+    </td>
+</tr>
+<tr>
+    <td> 
+        <img src="2.1_1.0.jpg" align="middle" width="200"/>
+    </td>
+    <td>
+        <img src="2.1_1.2.jpg" align="middle" width="200"/>
+    </td>
+    <td> 
+        <img src="2.1_1.5.jpg" align="middle" width="200"/>
+    </td>
+    <td>
+        <img src="2.1_2.0.jpg" align="middle" width="200"/>
+    </td>
+    <td>
+        <img src="2.1_5.0.jpg" align="middle" width="200"/>
+    </td>
+</tr>
+</table>
+<p><b>On my own image:</b></br>Wow I was sad when I took this picture because it was out of focus but I'm not sad anymore. So cool!</p>
+<table style="width=100%">
+<tr>
+    <td> 
+        <img src="latte3.jpg" align="middle" width="333"/>
+        <figcaption align="middle">og latte</figcaption>
+    </td>
+    <td>
+        <img src="2.1_latte3_s10a1.2.jpg" align="middle" width="333"/>
+        <figcaption align="middle">alpha = 1.2</figcaption>
+    </td>
+    <td>
+        <img src="2.1_latte3_s10a2.5.jpg" align="middle" width="333"/>
+        <figcaption align="middle">alpha = 1.5</figcaption>
+    </td>
+</tr>
+</table>
+<p><b>What happens if we blur the final sharpened image and sharpen it again?</b></p>
+<table style="width=100%" class="center">
+<tr>
+    <td> 
+        <img src="2.1_blurred.jpg" align="middle" width="333"/>
+        <figcaption align="middle">blurred from sharpened image</figcaption>
+    </td>
+    <td>
+        <img src="2.1_resharpened.jpg" align="middle" width="333"/>
+        <figcaption align="middle">re-sharpened with alpha = 1.5</figcaption>
+    </td>
+</tr>
+</table>
+<p>Definitely lost some quality. We see this especially apparent in the wrinkles of my hand where the resharpened image looks significantly blurrier than the sharpened image above it. It kind of looks like a painting now though which could be a cool artistic effect. </p>
+
+<h2 align="middle">2.2: Hybrid Images</h2>
+<table style="width=100%" class="center">
+<tr class="spaceUnder">
+    <td style="padding:0 15px"> 
+        <img src="2.2_hybrid_justinwolf_22_20.jpg" align="middle" width="200"/>
+        <figcaption align="middle">Justin Wolf</figcaption>
+    </td>
+    <td>
+        <img src="2.2_hybrid_carawolf_18_6.png" align="middle" width="300"/>
+        <figcaption align="middle">Cara Wolf</figcaption>
+    </td>
+    <td>
+        <img src="2.2_hybrid_maocat_12_6.png" align="middle" width="400"/>
+        <figcaption align="middle">Michelle Meow</figcaption>
+    </td>
+</tr>
+</table>
+<p><b>Frequency analysis (log magnitude of Fourier transform) for Justin Wolf:</b></p>
+<table>
+<tr>
+    <td> 
+        <img src="2.2_analysis_im1.jpg" align="middle" width="200"/>
+        <figcaption align="middle">im1</figcaption>
+    </td>
+    <td>
+        <img src="2.2_analysis_im1_hpf.jpg" align="middle" width="200"/>
+        <figcaption align="middle">im1 HPF</figcaption>
+    </td>
+    <td>
+        <img src="2.2_analysis_im2.jpg" align="middle" width="200"/>
+        <figcaption align="middle">im2</figcaption>
+    </td>
+    <td>
+        <img src="2.2_analysis_im2_lpf.jpg" align="middle" width="200"/>
+        <figcaption align="middle">im2 LPF</figcaption>
+    </td>
+    <td>
+        <img src="2.2_analysis_hybrid.jpg" align="middle" width="200"/>
+        <figcaption align="middle">hybrid</figcaption>
+    </td>
+</tr>
+</table>
+</br>
+<p>Below are two failures. It seems that blending two similar images (i.e. female human faces) does not produce good results. In contrast, something like an animal/human hybrid like above works well.</p>
+<table>
+    <tr>
+        <td>
+            <img src="2.2_failed1.png" width="440"/>
+        </td>
+        <td>
+            <img src="2.2_failed2.png" width="333"/>
+        </td>
+    </tr>
+</table>
+
+<h2 align="middle">2.3: Gaussian and Laplacian Stacks</h2>
+<p><b>Gaussian/Laplacian stacks for Lincoln and Gala:</b></p>
+<table>
+<tr class="spaceUnder">
+    <td> 
+        <img src="2.3_gaussian.png" align="middle" width=1000px/>
+        <figcaption align="middle">Gaussian Stack</figcaption>
+    </td>
+</tr>
+<tr>
+    <td>
+        <img src="2.3_laplacian.png" align="middle" width=1000px/>
+        <figcaption align="middle">Laplacian Stack</figcaption>
+    </td>
+</tr>
+</table>
+</br><p><b>Gaussian/Laplacian stacks for Justin Wolf:</b></p>
+<table>
+<tr class="spaceUnder">
+    <td> 
+        <img src="2.3_gaussstk.jpg" align="middle" width=1000px/>
+        <figcaption align="middle">Gaussian Stack</figcaption>
+    </td>
+</tr>
+<tr>
+    <td>
+        <img src="2.3_laplacstk.jpg" align="middle" width=1000px/>
+        <figcaption align="middle">Laplacian Stack</figcaption>
+    </td>
+</tr>
+</table>
+<h2 align="middle">2.4: Multiresolution Blending</h2>
+<table class="center">
+<tr class="spaceUnder">
+    <td> 
+        <img src="grace.jpg" align="middle" width=400px/>
+        <figcaption align="middle">Lin</figcaption>
+    </td>
+    <td>
+        <img src="me.jpg" align="middle" width=400px/>
+        <figcaption align="middle">Mao</figcaption>
+    </td>
+</tr>
+</table>
+
+<img src="2.4_graceme.jpg" align="middle" width=400px class="cent"/>
+<figcaption align="middle">Lmao</figcaption>
+
+<img src="2.4_graceme_zoom.jpg" width=300px class="cent"/>
+<figcaption align="middle">zoomed in: kind of scary</figcaption>
+
+</br></br>
+<h2 style="text-align: center;">End.</h2>
+</body>
+</html>
